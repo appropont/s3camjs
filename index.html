@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>HTML5 boilerplate – all you really need…</title>
+    <title>s3cam.js</title>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
     <!--[if IE]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    
+
     
 </head>
 
@@ -20,13 +20,31 @@
     
     </div>
     
+    
+    
     <div id="livepreview">
         <div id="webcam"></div>
-        <canvas id="canvas"></canvas>
+        <button id="start-processing-btn">Start Processing</button>
+        <button id="stop-processing-btn">Stop Processing</button>
+        <canvas id="currentCapturedFrame"></canvas>
+        <canvas id="previousCapturedFrame"></canvas>
     </div>
 
     
+    <div id="debug">
+        <div id="debug-temp">
+        
+        </div>
+        <ul>
+            <li>Captured Frames: <span id="debugCapturedFrames">0</span></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+    </div>
     
+    <script type="text/javascript" src="js/libs/zepto/dist/zepto.js"></script>
     <script type="text/javascript" src="js/libs/getUserMedia.js/dist/getUserMedia.js"></script>
     <script type="text/javascript" src="js/libs/Resemble.js/resemble.js"></script>
     <script type="text/javascript" src="js/libs/s3upload-coffee-javascript/s3upload.js"></script>

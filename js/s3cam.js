@@ -1,9 +1,6 @@
-/*globals  $: true, getUserMedia: true, alert:true, ccv:true */
-
-/*! getUserMedia demo - v1.0
-* for use with https://github.com/addyosmani/getUserMedia.js
-* Copyright (c) 2012 addyosmani; Licensed MIT */
-
+ var framerate = 1;
+ var minimumDifference = 10;
+ 
  (function () {
 	'use strict';
 
@@ -21,7 +18,7 @@
 				this.cam = null;
 				this.filter_on = false;
 				this.filter_id = 0;
-				this.canvas = document.getElementById("canvas");
+				this.canvas = document.getElementById("currentCapturedFrame");
 				this.ctx = this.canvas.getContext("2d");
 				this.img = new Image();
 				this.ctx.clearRect(0, 0, this.options.width, this.options.height);
@@ -58,14 +55,14 @@
 		// events that are triggered onCapture and onSave (for the fallback)
 		// and so on.
 		options: {
-			"audio": false, //OTHERWISE FF nightlxy throws an NOT IMPLEMENTED error
+			"audio": false, //OTHERWISE FF nightly throws an NOT IMPLEMENTED error
 			"video": true,
 			el: "webcam",
 
 			extern: null,
 			append: true,
 
-			// noFallback:true, use if you don't require a fallback
+			noFallback:true, //use if you don't require a fallback
 
 			width: 320, 
 			height: 240, 
@@ -180,7 +177,7 @@
 			source = document.querySelector('#canvas');
 			glasses = new Image();
 			glasses.src = "js/glasses/i/glasses.png";
-			canvas = document.querySelector("#output");
+			canvas = document.querySelector("#latestCapturedFrame");
 			ctx = canvas.getContext("2d");
 
 			ctx.drawImage(source, 0, 0, 520, 426);
@@ -241,11 +238,87 @@
 				}
 			}
 
-		}
+		},
+        
+        processStream : function() {
+        
+            
+            console.log("starting processStream");
+                        
+            var currentCapturedFrame = document.createElement('canvas');
+            var previousCapturedFrame = document.createElement('canvas');
+            
+            // Since the video tag is injected programmatically by shim,
+            //  it needs to be queried by tag name since no id is applied.
+            //  There should be only one video tag on this page anyway so,
+            //  this is considered safe.
+            var video = document.getElementsByTagName('video')[0];
+            var videoHeight = video.videoHeight;
+            var videoWidth = video.videoWidth;
+            currentCapturedFrame.width = videoWidth;
+            currentCapturedFrame.height = videoHeight;                
+            previousCapturedFrame.width = videoWidth;
+            previousCapturedFrame.height = videoHeight;
+        
+        
+            //temp
+            var fps = 1;
+            
+            var uploadedCount = 0;
+            
+            window.processInterval = setInterval(function () {
+            
+                var intervalStartTime = new Date();
+                
+                console.log("starting interval");
+            
+                //copy image in new image to old image place
+                previousCapturedFrame.getContext('2d').drawImage(currentCapturedFrame, 0, 0);
+                
+                //copy webcam image to new image place         
+                currentCapturedFrame.getContext('2d').drawImage(video, 0, 0);
+                var diff;
+                
+                //compare new image and old image
+                resemble( currentCapturedFrame.toDataURL() ).compareTo( previousCapturedFrame.toDataURL() ).onComplete(function(data) {
+                    console.log("Mismatch percent: " + data.misMatchPercentage);
+                    //console.log("isSameDimensions: " + data.isSameDimensions);
+                    
+                    //if different enough upload it
+                    if(data.misMatchPercentage > minimumDifference) {
+                        
+                        //upload to S3
+                        
+                        
+                    }
+                    
+                });
+
+            
+            
+            }, 1000/fps);
+            
+        },
+        
+        stopProcessing : function () {
+            clearInterval(window.processInterval);
+        }
+        
+        
 
 	};
 
 	App.init();
+    
+    $("#start-processing-btn").on("click", function() {
+        App.processStream();
+    });
+    
+    $("#stop-processing-btn").on("click", function() {
+        App.stopProcessing();
+    });
+    
+    
 
 })();
 

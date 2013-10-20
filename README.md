@@ -17,3 +17,6 @@ https://github.com/Huddle/Resemble.js
 
 ### getUserMedia.js shim
 https://github.com/addyosmani/getUserMedia.js
+
+### Zepto
+https://github.com/madrobby/zepto/
