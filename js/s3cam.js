@@ -14,23 +14,11 @@
 			// only
 			if ( !!this.options ) {
 
-				this.pos = 0;
-				this.cam = null;
-				this.filter_on = false;
-				this.filter_id = 0;
-				this.canvas = document.getElementById("currentCapturedFrame");
-				this.ctx = this.canvas.getContext("2d");
-				this.img = new Image();
-				this.ctx.clearRect(0, 0, this.options.width, this.options.height);
-				this.image = this.ctx.getImageData(0, 0, this.options.width, this.options.height);
-				
 				// Initialize getUserMedia with options
 				getUserMedia(this.options, this.success, this.deviceError);
 
 				// Initialize webcam options for fallback
 				window.webcam = this.options;
-
-				
 
 			} else {
 				alert('No options were supplied to the shim!');
@@ -55,7 +43,7 @@
 		// events that are triggered onCapture and onSave (for the fallback)
 		// and so on.
 		options: {
-			"audio": false, //OTHERWISE FF nightly throws an NOT IMPLEMENTED error
+			"audio": false,
 			"video": true,
 			el: "webcam",
 
@@ -74,34 +62,7 @@
 			context: "",
 
 			debug: function () {},
-			onCapture: function () {
-				window.webcam.save();
-			},
-			onTick: function () {},
-			onSave: function (data) {
 
-				var col = data.split(";"),
-					img = App.image,
-					tmp = null,
-					w = this.width,
-					h = this.height;
-
-				for (var i = 0; i < w; i++) { 
-					tmp = parseInt(col[i], 10);
-					img.data[App.pos + 0] = (tmp >> 16) & 0xff;
-					img.data[App.pos + 1] = (tmp >> 8) & 0xff;
-					img.data[App.pos + 2] = tmp & 0xff;
-					img.data[App.pos + 3] = 0xff;
-					App.pos += 4;
-				}
-
-				if (App.pos >= 4 * w * h) { 
-					App.ctx.putImageData(img, 0, 0);
-					App.pos = 0;
-				}
-
-			},
-			onLoad: function () {}
 		},
 
 		success: function (stream) {
@@ -139,36 +100,6 @@
 		deviceError: function (error) {
 			alert('No camera available.');
 			console.error('An error occurred: [CODE ' + error.code + ']');
-		},
-
-		changeFilter: function () {
-			if (this.filter_on) {
-				this.filter_id = (this.filter_id + 1) & 7;
-			}
-		},
-
-		getSnapshot: function () {
-			// If the current context is WebRTC/getUserMedia (something
-			// passed back from the shim to avoid doing further feature
-			// detection), we handle getting video/images for our canvas 
-			// from our HTML5 <video> element.
-			if (App.options.context === 'webrtc') {
-				var video = document.getElementsByTagName('video')[0]; 
-				App.canvas.width = video.videoWidth;
-				App.canvas.height = video.videoHeight;
-				App.canvas.getContext('2d').drawImage(video, 0, 0);
-
-			// Otherwise, if the context is Flash, we ask the shim to
-			// directly call window.webcam, where our shim is located
-			// and ask it to capture for us.
-			} else if(App.options.context === 'flash'){
-
-				window.webcam.capture();
-				App.changeFilter();
-			}
-			else{
-				alert('No context was supplied to getSnapshot()');
-			}
 		},
 
 		drawToCanvas: function (effect) {
@@ -240,7 +171,28 @@
 
 		},
         
-        processStream : function() {
+        
+        
+        
+
+	};
+
+	App.init();
+    
+    var AppViewModel = function() {
+    
+        var self = this;
+        
+        this.bucket = ko.observable();
+        this.accessKey = ko.observable();
+        this.secretKey = ko.observable();
+        
+        this.minDiff = ko.observable(10);
+        this.resolution = ko.observable();
+        this.fps = ko.observable(4);
+        this.jpegQuality = ko.observable(80);
+        
+        this.processStream = function() {
         
             
             console.log("starting processStream");
@@ -248,8 +200,8 @@
             var currentCapturedFrame = document.createElement('canvas');
             var previousCapturedFrame = document.createElement('canvas');
             
-            // Since the video tag is injected programmatically by shim,
-            //  it needs to be queried by tag name since no id is applied.
+            // The video tag is injected by shim.
+            //  It needs to be queried by tag name since no id is applied.
             //  There should be only one video tag on this page anyway so,
             //  this is considered safe.
             var video = document.getElementsByTagName('video')[0];
@@ -261,8 +213,14 @@
             previousCapturedFrame.height = videoHeight;
         
         
-            //temp
-            var fps = 1;
+            //cache knockout vars
+            var bucket = self.bucket();
+            var normalKey = self.accessKey();
+            var secretKey = self.secretKey();
+            
+            var minDiff = self.minDiff();
+            var fps = self.fps();
+            var jpegQuality = self.jpegQuality();
             
             var uploadedCount = 0;
             
@@ -270,17 +228,16 @@
             
                 var intervalStartTime = new Date();
                 
-                console.log("starting interval");
+                //console.log("starting interval");
             
                 //copy image in new image to old image place
                 previousCapturedFrame.getContext('2d').drawImage(currentCapturedFrame, 0, 0);
                 
                 //copy webcam image to new image place         
                 currentCapturedFrame.getContext('2d').drawImage(video, 0, 0);
-                var diff;
                 
-                var currentFrameDataURL = currentCapturedFrame.toDataURL();
-                var previousFrameDataURL = previousCapturedFrame.toDataURL();
+                var currentFrameDataURL = currentCapturedFrame.toDataURL("image/jpeg", jpegQuality);
+                var previousFrameDataURL = previousCapturedFrame.toDataURL("image/jpeg", jpegQuality);
                 
                 //compare new image and old image
                 resemble( currentFrameDataURL ).compareTo( previousFrameDataURL ).onComplete(function(data) {
@@ -288,13 +245,12 @@
                     //console.log("isSameDimensions: " + data.isSameDimensions);
                     
                     //if different enough upload it
-                    if(data.misMatchPercentage > maximumDifference) {
+                    if(data.misMatchPercentage > minDiff) {
                         
-                        //upload to S3
-                        var normalKey = apiKeys.normal;
-                        var secretKey = apiKeys.secret; 
+                        //my api keysfor testing 
+                        //var normalKey = apiKeys.normal;
+                        //var secretKey = apiKeys.secret; 
 
-                        var bucket = "s3camjs-test";
                         var path = "webcam1";
                         var filename = intervalStartTime.getTime() + ".jpg";
                         var key = (path != "") ? path + "/" + filename : filename;
@@ -302,17 +258,13 @@
                         var timestamp = intervalStartTime.toISOString();
                         
                         var acl = "private";
-                        
-                        var base64Head = 'data:image/png;base64,';
-                        var currentFrameFileSize = Math.round((currentFrameDataURL.length - base64Head.length)*3/4);
-                        
                                             
                         var policy = { 
                             "expiration": "2014-12-01T12:00:00.000Z", // hard coded for testing
                             "conditions": [
                                   ["starts-with", "$key", ""], 
                                   {"bucket": bucket}, 
-                                  {"acl": "private"}, 
+                                  {"acl": acl}, 
                                   ["starts-with", "$Content-Type", "image/jpeg"],
                             ]
                         };
@@ -337,22 +289,11 @@
                         
                         var currentFrameDataFile = helpers.dataURItoBlob(currentFrameDataURL);
                         fd.append("file", currentFrameDataFile);
-                        
-                        // Post code
-                        
-                        //raw xhr
-                        //fd.append('key', key);
-                        //fd.append('acl', 'public-read'); 
-                        //fd.append('Content-Type', file.type);      
-                        //fd.append('AWSAccessKeyId', 'YOUR ACCESS KEY');
-                        //fd.append('policy', 'YOUR POLICY')
-                        //fd.append('signature','YOUR SIGNATURE');
 
-                        //fd.append("file",file);
-
+                        // raw xhr is used because I was having issues with zepto.ajax
+                        //  Amazon was complaining about a malformed POST body.
                         var xhr = new XMLHttpRequest();
 
-                        //xhr.upload.addEventListener("progress", uploadProgress, false);
                         xhr.addEventListener("load", function(event) {
                             console.log("xhr.loadListener");
                             console.log(event);
@@ -367,76 +308,9 @@
                             console.log(event);
                         }, false);
 
-                        xhr.open('POST', 'https://'+bucket+'.s3.amazonaws.com', true); //MUST BE LAST LINE BEFORE YOU SEND 
+                        xhr.open('POST', 'https://' + bucket + '.s3.amazonaws.com', true);  
 
                         xhr.send(fd);
-                        
-                        //zepto
-                        /*$.ajax({
-                        
-                            type: "POST",
-                            url: "https://"+bucket+".s3.amazonaws.com",
-                            data: fd,
-                            //file: currentFrameDataFile,
-                            contentType: "multipart/form-data",
-                            success: function(data, status, xhr) {
-                                console.log("ajax success");
-                            },
-                            error: function(xhr, errorType, error) {
-                                console.log("ajax error");                                
-                                console.log("errorType: ");
-                                console.log(errorType);
-                                console.log("error: ");
-                                console.log(error);
-                                console.log("xhr: ");
-                                console.log(xhr);
-                            }
-                            
-                        });*/
-                        
-                        //PUT code
-                        /*
-                        
-                        var stringToSign = "PUT\n" +
-                                            "\n" +
-                                            "image/jpeg\n" +
-                                            timestamp + "\n" +
-                                            "/" + bucket + key;
-                        
-                        var xhr = helpers.createCORSRequest('PUT' , "https://" + 
-                                                            bucket + 
-                                                            ".s3.amazonaws.com/" + 
-                                                            path + 
-                                                            "/" + 
-                                                            filename);
-                        if (!xhr){
-                            throw new Error('CORS not supported');
-                        }
-                        
-                        xhr.setRequestHeader("Content-Type" , "image/jpeg");
-                        //xhr.setRequestHeader("Content-Length" , currentFrameFileSize);
-                        //xhr.setRequestHeader("Host" , bucket + ".s3.amazonaws.com");                        
-                        //xhr.setRequestHeader("Date" , timestamp);                                       
-                        xhr.setRequestHeader("x-amz-date" , timestamp);                 
-                        
-                        xhr.setRequestHeader("Authorization" , "AWS " + normalKey + ":" + signature);
-
-                        xhr.send(currentFrameDataURL);
-
-                        xhr.onload = function(){
-                            // process the response.
-                            console.log("PUT success");
-                            console.log(xhr.request);
-                            console.log(xhr.response);
-                        };
-
-                        xhr.onerror = function(e){
-                            console.log("PUT failed");
-                            console.log(e);
-                        };*/
-                        
-                        
-                        
                         
                     }
                     
@@ -446,27 +320,15 @@
             
             }, 1000/fps);
             
-        },
+        };
         
-        stopProcessing : function () {
+        this.stopProcessing = function () {
             clearInterval(window.processInterval);
-        }
+        };
         
-        
-
-	};
-
-	App.init();
+    };
     
-    $("#start-processing-btn").on("click", function() {
-        App.processStream();
-    });
-    
-    $("#stop-processing-btn").on("click", function() {
-        App.stopProcessing();
-    });
-    
-    
+    ko.applyBindings( new AppViewModel() );
 
 })();
 

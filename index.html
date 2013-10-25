@@ -5,6 +5,9 @@
     <title>s3cam.js</title>
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    
     <!--[if IE]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -15,33 +18,59 @@
 <body id="home">
 
     <h1>s3cam.js</h1>
+    
+    <div id="description">
+        <h2>Description</h2>
+        <p>An HTML5/JS webcam app.</p>
+        <dl>
+            <dt>Purely Client-Side</dt>
+            <dd>This app does not rely on any server-side code (besides amazon of course).</dd>
+            <dt>Motion-Detection</dt>
+            <dd>The motion detection works by taking a diff of the current frame and the previous frame.</dd>
+            <dt>Straight to Amazon</dt>
+            <dd>The images are uploaded to Amazon S3 on-the-fly. Local storage is vulnerable to an attacker taking the device.</dd>
+        </dl>
+    </div>
 
     <div id="settings">
     
-    </div>
+        <form class="pure-form">
+            
+            <legend>S3 Settings</legend>
     
+            <label for="bucket">Bucket</label>
+            <input id="bucket" type="text" placeholder="Bucket" data-bind="value: bucket">
+            
+            <label for="accessKey">Access Key</label>
+            <input id="accessKey" type="text" placeholder="Access Key" data-bind="value: accessKey">
+            
+            <label for="secretKey">Secret Key</label>
+            <input id="secretKey" type="text" placeholder="Secret Key" data-bind="value: secretKey">
+            
+            <legend>Capture Settings</legend>
+            
+            <label for="minDiff">Minimum Diff</label>
+            <input id="minDiff" type="number" min="1" max="100" value="10" data-bind="value: minDiff">
     
+            <label for="resolution">Resolution</label>
+            <select id="resolution"></select>
+            
+            <label for="fps">FPS</label>
+            <input id="fps" type="number" min="1" max="15" value="4" data-bind="value: fps">
+            
+            <label for="jpegQuality">JPEG Quality</label>
+            <input id="jpegQuality" type="number" min="1" max="100" value="80" data-bind="value: jpegQuality">
+            
+            <!--<label for="filenameScheme">Filename Scheme</label>
+            <select id="filenameScheme"></select>-->
+            
+        </form>
+    </div>    
     
     <div id="livepreview">
         <div id="webcam"></div>
-        <button id="start-processing-btn">Start Processing</button>
-        <button id="stop-processing-btn">Stop Processing</button>
-        <canvas id="currentCapturedFrame"></canvas>
-        <canvas id="previousCapturedFrame"></canvas>
-    </div>
-
-    
-    <div id="debug">
-        <div id="debug-temp">
-        
-        </div>
-        <ul>
-            <li>Captured Frames: <span id="debugCapturedFrames">0</span></li>
-            <li></li>
-            <li></li>
-            <li></li>
-            <li></li>
-        </ul>
+        <button id="start-processing-btn" data-bind="click: processStream">Start Processing</button>
+        <button id="stop-processing-btn" data-bind="click: stopProcessing">Stop Processing</button>
     </div>
     
     
@@ -54,6 +83,9 @@
     <script type="text/javascript" src="js/libs/sha1.js"></script>
     <script type="text/javascript" src="js/libs/webtoolkit.base64.js"></script>
     <script type="text/javascript" src="js/libs/helpers.js"></script>
+    
+    <script type="text/javascript" src="js/libs/knockout/knockout-3.0.0.js"></script>
+    
     
     <script type="text/javascript" src="js/s3cam.js"></script>
     
