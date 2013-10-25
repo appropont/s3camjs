@@ -1,5 +1,5 @@
  var framerate = 1;
- var minimumDifference = 10;
+ var maximumDifference = 10;
  
  (function () {
 	'use strict';
@@ -279,15 +279,163 @@
                 currentCapturedFrame.getContext('2d').drawImage(video, 0, 0);
                 var diff;
                 
+                var currentFrameDataURL = currentCapturedFrame.toDataURL();
+                var previousFrameDataURL = previousCapturedFrame.toDataURL();
+                
                 //compare new image and old image
-                resemble( currentCapturedFrame.toDataURL() ).compareTo( previousCapturedFrame.toDataURL() ).onComplete(function(data) {
+                resemble( currentFrameDataURL ).compareTo( previousFrameDataURL ).onComplete(function(data) {
                     console.log("Mismatch percent: " + data.misMatchPercentage);
                     //console.log("isSameDimensions: " + data.isSameDimensions);
                     
                     //if different enough upload it
-                    if(data.misMatchPercentage > minimumDifference) {
+                    if(data.misMatchPercentage > maximumDifference) {
                         
                         //upload to S3
+                        var normalKey = apiKeys.normal;
+                        var secretKey = apiKeys.secret; 
+
+                        var bucket = "s3camjs-test";
+                        var path = "webcam1";
+                        var filename = intervalStartTime.getTime() + ".jpg";
+                        var key = (path != "") ? path + "/" + filename : filename;
+                        
+                        var timestamp = intervalStartTime.toISOString();
+                        
+                        var acl = "private";
+                        
+                        var base64Head = 'data:image/png;base64,';
+                        var currentFrameFileSize = Math.round((currentFrameDataURL.length - base64Head.length)*3/4);
+                        
+                                            
+                        var policy = { 
+                            "expiration": "2014-12-01T12:00:00.000Z", // hard coded for testing
+                            "conditions": [
+                                  ["starts-with", "$key", ""], 
+                                  {"bucket": bucket}, 
+                                  {"acl": "private"}, 
+                                  ["starts-with", "$Content-Type", "image/jpeg"],
+                            ]
+                        };
+                        
+                        var policyJSON = JSON.stringify(policy);                      
+                        var policyBase64 = Base64.encode(policyJSON);
+                        var signature = b64_hmac_sha1(secretKey, policyBase64);
+                        
+                        //Form submit version
+                        var fd = new FormData();
+                        
+                        fd.append("key", key);
+                        fd.append("AWSAccessKeyId", normalKey);
+                        fd.append("acl", acl);
+                        fd.append("policy", policyBase64);
+                        fd.append("signature", signature);                        
+                        //fd.append("success_action_status", 201);
+                        fd.append("Content-Type", "image/jpeg");
+                        
+                        var currentFrameDataURLMinusHeader = currentFrameDataURL.replace(/^data:image\/\w+;base64,/, "");
+                        var currentFrameDataDecoded = Base64.decode(currentFrameDataURLMinusHeader);
+                        
+                        var currentFrameDataFile = helpers.dataURItoBlob(currentFrameDataURL);
+                        fd.append("file", currentFrameDataFile);
+                        
+                        // Post code
+                        
+                        //raw xhr
+                        //fd.append('key', key);
+                        //fd.append('acl', 'public-read'); 
+                        //fd.append('Content-Type', file.type);      
+                        //fd.append('AWSAccessKeyId', 'YOUR ACCESS KEY');
+                        //fd.append('policy', 'YOUR POLICY')
+                        //fd.append('signature','YOUR SIGNATURE');
+
+                        //fd.append("file",file);
+
+                        var xhr = new XMLHttpRequest();
+
+                        //xhr.upload.addEventListener("progress", uploadProgress, false);
+                        xhr.addEventListener("load", function(event) {
+                            console.log("xhr.loadListener");
+                            console.log(event);
+                            console.log(xhr)
+                        }, false);
+                        xhr.addEventListener("error", function(event) {
+                            console.log("xhr.errorListener");
+                            console.log(event);
+                        }, false);
+                        xhr.addEventListener("abort", function(event) {
+                            console.log("xhr.abortListener");
+                            console.log(event);
+                        }, false);
+
+                        xhr.open('POST', 'https://'+bucket+'.s3.amazonaws.com', true); //MUST BE LAST LINE BEFORE YOU SEND 
+
+                        xhr.send(fd);
+                        
+                        //zepto
+                        /*$.ajax({
+                        
+                            type: "POST",
+                            url: "https://"+bucket+".s3.amazonaws.com",
+                            data: fd,
+                            //file: currentFrameDataFile,
+                            contentType: "multipart/form-data",
+                            success: function(data, status, xhr) {
+                                console.log("ajax success");
+                            },
+                            error: function(xhr, errorType, error) {
+                                console.log("ajax error");                                
+                                console.log("errorType: ");
+                                console.log(errorType);
+                                console.log("error: ");
+                                console.log(error);
+                                console.log("xhr: ");
+                                console.log(xhr);
+                            }
+                            
+                        });*/
+                        
+                        //PUT code
+                        /*
+                        
+                        var stringToSign = "PUT\n" +
+                                            "\n" +
+                                            "image/jpeg\n" +
+                                            timestamp + "\n" +
+                                            "/" + bucket + key;
+                        
+                        var xhr = helpers.createCORSRequest('PUT' , "https://" + 
+                                                            bucket + 
+                                                            ".s3.amazonaws.com/" + 
+                                                            path + 
+                                                            "/" + 
+                                                            filename);
+                        if (!xhr){
+                            throw new Error('CORS not supported');
+                        }
+                        
+                        xhr.setRequestHeader("Content-Type" , "image/jpeg");
+                        //xhr.setRequestHeader("Content-Length" , currentFrameFileSize);
+                        //xhr.setRequestHeader("Host" , bucket + ".s3.amazonaws.com");                        
+                        //xhr.setRequestHeader("Date" , timestamp);                                       
+                        xhr.setRequestHeader("x-amz-date" , timestamp);                 
+                        
+                        xhr.setRequestHeader("Authorization" , "AWS " + normalKey + ":" + signature);
+
+                        xhr.send(currentFrameDataURL);
+
+                        xhr.onload = function(){
+                            // process the response.
+                            console.log("PUT success");
+                            console.log(xhr.request);
+                            console.log(xhr.response);
+                        };
+
+                        xhr.onerror = function(e){
+                            console.log("PUT failed");
+                            console.log(e);
+                        };*/
+                        
+                        
                         
                         
                     }
