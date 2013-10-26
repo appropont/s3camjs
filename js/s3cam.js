@@ -1,6 +1,4 @@
- var framerate = 1;
- var maximumDifference = 10;
- 
+
  (function () {
 	'use strict';
 
@@ -98,8 +96,14 @@
 		},
 
 		deviceError: function (error) {
-			alert('No camera available.');
+            smoke.alert("The webcam experienced a fatal error. You could try refreshing to start over, but it is likely caused by a browser insufficiency. Try Google Chrome.", function(e){}, {
+                ok: "Ok",
+                classname: "pure-button-error",
+                clickableBG: false
+            });
+			//alert('No camera available.');
 			console.error('An error occurred: [CODE ' + error.code + ']');
+            console.log(error);
 		},
 
 		drawToCanvas: function (effect) {
@@ -194,6 +198,26 @@
         this.jpegQuality = ko.observable(80);
         
         this.isProcessing = ko.observable(false);
+        
+        //browser constraints
+        this.getUserMediaAble = ko.observable(true);
+        this.xhr2CORSAble = ko.observable(true);
+        this.canvasAble = ko.observable(true);
+        this.isChromeUsed = ko.observable(false);
+        
+        this.hasErrors = ko.computed(function() {
+            if( !self.getUserMediaAble() || 
+                !self.xhr2CORSAble() ||
+                !self.canvasAble() ||
+                !self.isChromeUsed() ) {
+                
+                    return true;
+                
+            } 
+            
+            return false;
+        });
+        
         
         this.resolutions = ko.observableArray([
             {
@@ -355,9 +379,55 @@
             clearInterval(window.processInterval);
         };
         
+        this.checkConstraints = function() {
+            
+            //getUserMedia constraint
+            var getUserMedia = navigator.getUserMedia 
+                                || navigator.webkitGetUserMedia 
+                                || navigator.mozGetUserMedia;
+
+            if (! getUserMedia ) {
+                self.getUserMediaAble(false);
+                console.log("not getUserMediaAble");
+            }
+            
+            //xhr2 CORS constraint
+            if ('withCredentials' in new XMLHttpRequest()) {
+                /* supports cross-domain requests */
+            }
+            else if(typeof XDomainRequest !== "undefined"){
+              //IE-specific check for future profing in case it becomes viable
+              //to run this app in IE for now is sets the constraint to false              
+            }else{
+                self.xhr2CORSAble(false);
+                console.log("not xhr2CORSAble");
+            }
+            
+            //Chrome browser constraint
+            if(/chrom(e|ium)/.test(navigator.userAgent.toLowerCase())){
+                self.isChromeUsed(true);                
+                console.log("using chrome");
+            }
+            
+            var elem = document.createElement('canvas');
+            if( !(elem.getContext && elem.getContext('2d')) ) {
+                self.canvasAble(false);                
+                console.log("no canvas");
+            };
+            
+        }();
+        
+        
+        
+        
+        
     };
     
-    ko.applyBindings( new AppViewModel() );
+    $(document).ready(function() {
+        var viewModel = new AppViewModel();
+        ko.applyBindings( viewModel );
+        //viewModel.checkConstraints();
+    });
 
 })();
 
