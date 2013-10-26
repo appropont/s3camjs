@@ -186,6 +186,7 @@
         this.bucket = ko.observable();
         this.accessKey = ko.observable();
         this.secretKey = ko.observable();
+        this.subdirectory = ko.observable("");
         
         this.minDiff = ko.observable(10);
         this.resolution = ko.observable();
@@ -220,6 +221,7 @@
             var bucket = self.bucket();
             var normalKey = self.accessKey();
             var secretKey = self.secretKey();
+            var path = self.subdirectory();
             
             var minDiff = self.minDiff();
             var fps = self.fps();
@@ -256,7 +258,7 @@
                         var normalKey = apiKeys.normal;
                         var secretKey = apiKeys.secret; 
 
-                        var path = "webcam1";
+                        //var path = "webcam1";
                         var filename = intervalStartTime.getTime() + ".jpg";
                         var key = (path != "") ? path + "/" + filename : filename;
                         
