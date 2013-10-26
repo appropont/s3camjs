@@ -192,10 +192,13 @@
         this.fps = ko.observable(4);
         this.jpegQuality = ko.observable(80);
         
+        this.isProcessing = ko.observable(false);
+        
         this.processStream = function() {
         
             
             console.log("starting processStream");
+            this.isProcessing(true);
                         
             var currentCapturedFrame = document.createElement('canvas');
             var previousCapturedFrame = document.createElement('canvas');
@@ -248,8 +251,9 @@
                     if(data.misMatchPercentage > minDiff) {
                         
                         //my api keysfor testing 
-                        //var normalKey = apiKeys.normal;
-                        //var secretKey = apiKeys.secret; 
+                        var bucket = "s3camjs-test";
+                        var normalKey = apiKeys.normal;
+                        var secretKey = apiKeys.secret; 
 
                         var path = "webcam1";
                         var filename = intervalStartTime.getTime() + ".jpg";
@@ -271,6 +275,8 @@
                         
                         var policyJSON = JSON.stringify(policy);                      
                         var policyBase64 = Base64.encode(policyJSON);
+                        console.log("secretKey before signature making");
+                        console.log(secretKey);
                         var signature = b64_hmac_sha1(secretKey, policyBase64);
                         
                         //Form submit version
@@ -323,6 +329,9 @@
         };
         
         this.stopProcessing = function () {
+        
+            this.isProcessing(false);
+        
             clearInterval(window.processInterval);
         };
         
