@@ -222,13 +222,13 @@
         this.resolutions = ko.observableArray([
             {
                 display: "320 x 240",
-                height: 320,
-                width: 240
+                width: 320,
+                height: 240
             },
             {
                 display: "640 x 480",
-                height: 640,
-                width: 480
+                width: 640,
+                height: 480
             }
         ]);
         
@@ -256,6 +256,12 @@
             currentCapturedFrame.height = videoHeight;                
             previousCapturedFrame.width = videoWidth;
             previousCapturedFrame.height = videoHeight;
+            
+            
+            console.log("video.videoHeight: " + video.videoHeight);
+            console.log("video.videoWidth: " + video.videoWidth);
+            console.log("selectedResolution.height: " + videoHeight);
+            console.log("selectedResolution.width: " + videoWidth);
         
         
             //cache knockout vars
@@ -278,23 +284,22 @@
                 var intervalStartTime = new Date();
             
                 //copy image in new image to old image place
-                previousCapturedFrame.getContext('2d').drawImage(currentCapturedFrame, 0, 0);
+                previousCapturedFrame.getContext('2d').drawImage(currentCapturedFrame, 0, 0, videoWidth, videoHeight);
                 
                 //copy webcam image to new image place         
-                currentCapturedFrame.getContext('2d').drawImage(video, 0, 0);
+                currentCapturedFrame.getContext('2d').drawImage(video, 0, 0, videoWidth, videoHeight);
                 
-                var currentFrameDataURL = currentCapturedFrame.toDataURL("image/jpeg", jpegQuality);
                 var previousFrameDataURL = previousCapturedFrame.toDataURL("image/jpeg", jpegQuality);
+                var currentFrameDataURL = currentCapturedFrame.toDataURL("image/jpeg", jpegQuality);
                 
                 //compare new image and old image
                 resemble( currentFrameDataURL ).compareTo( previousFrameDataURL ).onComplete(function(data) {
                     console.log("Mismatch percent: " + data.misMatchPercentage);
-                    //console.log("isSameDimensions: " + data.isSameDimensions);
                     
                     //if different enough upload it
                     if(data.misMatchPercentage > minDiff && !isFirstFrame) {                        
                         
-                        //my api keysfor testing 
+                        //my api keys for testing 
                         var bucket = "s3camjs-test";
                         var normalKey = apiKeys.normal;
                         var secretKey = apiKeys.secret; 
@@ -332,8 +337,8 @@
                         //fd.append("success_action_status", 201);
                         fd.append("Content-Type", "image/jpeg");
                         
-                        var currentFrameDataURLMinusHeader = currentFrameDataURL.replace(/^data:image\/\w+;base64,/, "");
-                        var currentFrameDataDecoded = Base64.decode(currentFrameDataURLMinusHeader);
+                        //var currentFrameDataURLMinusHeader = currentFrameDataURL.replace(/^data:image\/\w+;base64,/, "");
+                        //var currentFrameDataDecoded = Base64.decode(currentFrameDataURLMinusHeader);
                         
                         var currentFrameDataFile = helpers.dataURItoBlob(currentFrameDataURL);
                         fd.append("file", currentFrameDataFile);
