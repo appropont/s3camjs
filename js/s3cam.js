@@ -284,10 +284,22 @@
                 var intervalStartTime = new Date();
             
                 //copy image in new image to old image place
-                previousCapturedFrame.getContext('2d').drawImage(currentCapturedFrame, 0, 0, videoWidth, videoHeight);
+                var previousFrameContext = previousCapturedFrame.getContext('2d');
+                previousFrameContext.drawImage(currentCapturedFrame, 0, 0, videoWidth, videoHeight);
                 
                 //copy webcam image to new image place         
-                currentCapturedFrame.getContext('2d').drawImage(video, 0, 0, videoWidth, videoHeight);
+                var currentFrameContext = currentCapturedFrame.getContext('2d');
+                currentFrameContext.drawImage(video, 0, 0, videoWidth, videoHeight);
+                
+                //place text on images
+
+                 // Fill Text
+                currentFrameContext.lineWidth=1;
+                currentFrameContext.fillStyle="#ffffff";
+                currentFrameContext.lineStyle="#000000";
+                currentFrameContext.textBaseLine="top";
+                currentFrameContext.font="18px sans-serif";
+                currentFrameContext.fillText(intervalStartTime, 0, 20, videoWidth);
                 
                 var previousFrameDataURL = previousCapturedFrame.toDataURL("image/jpeg", jpegQuality);
                 var currentFrameDataURL = currentCapturedFrame.toDataURL("image/jpeg", jpegQuality);
@@ -297,7 +309,10 @@
                     console.log("Mismatch percent: " + data.misMatchPercentage);
                     
                     //if different enough upload it
-                    if(data.misMatchPercentage > minDiff && !isFirstFrame) {                        
+                    if(data.misMatchPercentage > minDiff && !isFirstFrame) {      
+
+                        
+                        
                         
                         //my api keys for testing 
                         var bucket = "s3camjs-test";
@@ -337,10 +352,10 @@
                         //fd.append("success_action_status", 201);
                         fd.append("Content-Type", "image/jpeg");
                         
-                        //var currentFrameDataURLMinusHeader = currentFrameDataURL.replace(/^data:image\/\w+;base64,/, "");
-                        //var currentFrameDataDecoded = Base64.decode(currentFrameDataURLMinusHeader);
-                        
                         var currentFrameDataFile = helpers.dataURItoBlob(currentFrameDataURL);
+                        
+                        
+                        
                         fd.append("file", currentFrameDataFile);
 
                         // raw xhr is used because I was having issues with zepto.ajax
