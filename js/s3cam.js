@@ -227,11 +227,12 @@
             
             var uploadedCount = 0;
             
+            //var to keep from diffing first frame of process starting
+            var isFirstFrame = true;
+            
             window.processInterval = setInterval(function () {
             
                 var intervalStartTime = new Date();
-                
-                //console.log("starting interval");
             
                 //copy image in new image to old image place
                 previousCapturedFrame.getContext('2d').drawImage(currentCapturedFrame, 0, 0);
@@ -248,7 +249,7 @@
                     //console.log("isSameDimensions: " + data.isSameDimensions);
                     
                     //if different enough upload it
-                    if(data.misMatchPercentage > minDiff) {
+                    if(data.misMatchPercentage > minDiff && !isFirstFrame) {                        
                         
                         //my api keysfor testing 
                         var bucket = "s3camjs-test";
@@ -275,8 +276,6 @@
                         
                         var policyJSON = JSON.stringify(policy);                      
                         var policyBase64 = Base64.encode(policyJSON);
-                        console.log("secretKey before signature making");
-                        console.log(secretKey);
                         var signature = b64_hmac_sha1(secretKey, policyBase64);
                         
                         //Form submit version
@@ -319,6 +318,8 @@
                         xhr.send(fd);
                         
                     }
+                    
+                    isFirstFrame = false;
                     
                 });
 
