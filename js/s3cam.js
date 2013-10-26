@@ -195,6 +195,21 @@
         
         this.isProcessing = ko.observable(false);
         
+        this.resolutions = ko.observableArray([
+            {
+                display: "320 x 240",
+                height: 320,
+                width: 240
+            },
+            {
+                display: "640 x 480",
+                height: 640,
+                width: 480
+            }
+        ]);
+        
+        this.selectedResolution = ko.observable();
+        
         this.processStream = function() {
         
             
@@ -208,9 +223,11 @@
             //  It needs to be queried by tag name since no id is applied.
             //  There should be only one video tag on this page anyway so,
             //  this is considered safe.
+            var selectedResolution = self.selectedResolution();
+            
             var video = document.getElementsByTagName('video')[0];
-            var videoHeight = video.videoHeight;
-            var videoWidth = video.videoWidth;
+            var videoHeight = selectedResolution.height;
+            var videoWidth = selectedResolution.width;
             currentCapturedFrame.width = videoWidth;
             currentCapturedFrame.height = videoHeight;                
             previousCapturedFrame.width = videoWidth;
