@@ -1,0 +1,101 @@
+.pure-button-success,
+.pure-button-error,
+.pure-button-warning,
+.pure-button-primary,
+.pure-button-secondary {
+    color: white;
+    border-radius: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+.pure-button-success {
+    background: rgb(28, 184, 65); /* this is a green */
+}
+
+.pure-button-error {
+    background: rgb(202, 60, 60); /* this is a maroon */
+}
+
+.pure-button-warning {
+    background: rgb(223, 117, 20); /* this is an orange */
+}
+
+.pure-button-secondary {
+    background: rgb(66, 184, 221); /* this is a light blue */
+}
+
+
+
+#header, #settings {
+    margin: 0 12.5%;
+}
+
+#header-features h3 {
+    margin: 0;
+    color: #666;
+}
+
+#header-features ul {
+    padding: 0;
+}
+#header-features li {
+    padding: 0.4em;
+    text-align: center;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+#live-preview {
+    text-align: center;
+    padding: 1em;
+}
+
+.pure-g-r > div {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+.form-section {
+    border: thin solid #444;
+    border-radius: 4px;
+    padding: 1em;
+}
+
+.form-section-wrapper {
+    padding: 1em;
+}
+
+.some-padding {
+    padding: 1em;
+}
+
+video {
+    max-width: 100%;
+}
+
+.pure-button {
+    padding: 0.2em .5em;
+}
+
+.align-left {
+    text-align: left;
+}
+
+#title-inner-wrapper h1, 
+#title-inner-wrapper p {
+        margin: 0;
+}
+
+.error-warning {
+    padding: 0.5em 1em;
+}
+
+.smoke {
+    letter-spacing: 0;
+    color: #FFF;
+    font-family: inherit;
+}
+
+.smoke .dialog-inner {
+    color: #fff;
+}
