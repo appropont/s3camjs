@@ -106,79 +106,6 @@
             console.log(error);
 		},
 
-		drawToCanvas: function (effect) {
-			var source, glasses, canvas, ctx, pixels, i;
-
-			source = document.querySelector('#canvas');
-			glasses = new Image();
-			glasses.src = "js/glasses/i/glasses.png";
-			canvas = document.querySelector("#latestCapturedFrame");
-			ctx = canvas.getContext("2d");
-
-			ctx.drawImage(source, 0, 0, 520, 426);
-
-			pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-			// Hipstergram!
-			if (effect === 'hipster') {
-
-				for (i = 0; i < pixels.data.length; i = i + 4) {
-					pixels.data[i + 0] = pixels.data[i + 0] * 3;
-					pixels.data[i + 1] = pixels.data[i + 1] * 2;
-					pixels.data[i + 2] = pixels.data[i + 2] - 10;
-				}
-
-				ctx.putImageData(pixels, 0, 0);
-
-			}
-
-			// Green Screen
-			else if (effect === 'greenscreen') {
-
-				// Selectors 
-				var rmin = $('#red input.min').val(),
-					gmin = $('#green input.min').val(),
-					bmin = $('#blue input.min').val(),
-					rmax = $('#red input.max').val(),
-					gmax = $('#green input.max').val(),
-					bmax = $('#blue input.max').val(),
-					green = 0, red = 0, blue = 0;
-
-
-				for (i = 0; i < pixels.data.length; i = i + 4) {
-					red = pixels.data[i + 0];
-					green = pixels.data[i + 1];
-					blue = pixels.data[i + 2];
-					alpha = pixels.data[i + 3];
-
-					if (red >= rmin && green >= gmin && blue >= bmin && red <= rmax && green <= gmax && blue <= bmax) {
-						pixels.data[i + 3] = 0;
-					}
-				}
-
-				ctx.putImageData(pixels, 0, 0);
-
-			} else if (effect === 'glasses') {
-
-				var comp = ccv.detect_objects({
-					"canvas": (canvas),
-					"cascade": cascade,
-					"interval": 5,
-					"min_neighbors": 1
-				});
-
-				// Draw glasses on everyone!
-				for (i = 0; i < comp.length; i++) {
-					ctx.drawImage(glasses, comp[i].x, comp[i].y, comp[i].width, comp[i].height);
-				}
-			}
-
-		},
-        
-        
-        
-        
-
 	};
 
 	App.init();
@@ -315,9 +242,9 @@
                         
                         
                         //my api keys for testing 
-                        var bucket = "s3camjs-test";
-                        var normalKey = apiKeys.normal;
-                        var secretKey = apiKeys.secret; 
+                        //var bucket = "s3camjs-test";
+                        //var normalKey = apiKeys.normal;
+                        //var secretKey = apiKeys.secret; 
 
                         //var path = "webcam1";
                         var filename = intervalStartTime.getTime() + ".jpg";
