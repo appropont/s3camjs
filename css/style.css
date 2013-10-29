@@ -99,3 +99,16 @@ video {
 .smoke .dialog-inner {
     color: #fff;
 }
+
+#instructions {    
+    margin: 0 12.5%;
+}
+
+h2 {
+    margin: 0;
+}
+
+code {
+    width: 100%;
+    overflow: scroll;
+}
