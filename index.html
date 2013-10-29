@@ -47,7 +47,7 @@
         </noscript>
         
         <div class="pure-g-r" data-bind="if:hasErrors">            
-            <div class="pure-u some-padding error-warning">
+            <div class="pure-u-1 some-padding error-warning">
                 <div class="some-padding pure-button-error">
                     <h2>Errors Encountered</h2>
                     <ul>
@@ -75,6 +75,26 @@
     </header>
     
     
+    <div id="instructions" class="pure-u-3-4">
+    
+        <h2>Getting Started</h2>
+        
+        <div class="pure-g-r">
+        
+            <div class="pure-u-1-3 some-padding">
+                <h3>Step 1</h3>
+                <p>Create a new S3 bucket. You could use an existing one, but from a security standpoint that isn't a good idea.</p>
+                <h3>Step 2</h3>
+                <p>Edit your CORS Configuration in the Permissions tab of your new bucket's Properties.</p>
+            </div>
+            <div class="pure-u-2-3 some-padding">
+                <h3>Example CORS Configuration</h3>
+                <iframe src="http://pastebin.com/embed_iframe.php?i=3Qb0PCSk" style="border:none;width:100%;height: 12em;"></iframe>
+            </div>
+        
+        </div>
+        
+    </div>
 
     <div id="settings" class="pure-u-3-4">
     
